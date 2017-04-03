@@ -8,7 +8,10 @@
 
 //we will use just the 4x4 multidim. vector
 typedef struct _Shape{
-	uint8_t line;
+	uint8_t x;
+	uint8_t y;
+	uint8_t width;
+	uint8_t height;
 	uint8_t* shpMat; 
 }Shape;
 

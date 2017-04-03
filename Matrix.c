@@ -85,7 +85,7 @@ void main(int argc, char* argv[]){
 	while(1){
 		
 		sendMatrix(m);
-		if (shp->line <= 8)
+		if (shp->y <= 8)
 			m = shapeFall(shp);
 		sleep(1);
 	}
