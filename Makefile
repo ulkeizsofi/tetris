@@ -1,8 +1,8 @@
 CC=gcc
-CFLAGS=-I. -lwiringPi
+CFLAGS=-lwiringPi
 DEPS = shape.h
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 matrixmake: Matrix.o shape.o 
-	gcc -o matrixmake Matrix.o shape.o -I. -lwiringPi
+	$(CC) -o matrixmake Matrix.o shape.o $(CFLAGS)
