@@ -1,21 +1,13 @@
 #include <stdio.h>
-#include <wiringPiSPI.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 #include "shape.h"
+#include "matrixDrv.h"
+#include <unistd.h>
 
-void sendMatrix(uint8_t* matrix){
-	uint8_t buff[2];
-	int i;
-	for (i = 0; i < 8; i++){
-		buff[1] = matrix[i];
-		buff[0] = i + 1;
-		wiringPiSPIDataRW(0, buff, 2);
-	}
-}
-
-uint8_t* merge2Matrix(uint8_t* m1, uint8_t* m2){
+uint8_t* merge2Matrixes(uint8_t* m1, uint8_t* m2){
 	
 	uint8_t* matrix;
 	matrix = (uint8_t*)malloc(8*sizeof(uint8_t));
@@ -26,27 +18,21 @@ uint8_t* merge2Matrix(uint8_t* m1, uint8_t* m2){
 	return matrix;
 }
 
+uint8_t* placeShapeToMatrix(uint8_t* matrix, Shape shp, uint8_t x, uint8_t y){
+	uint8_t *extended = shapeToMatrix(shp, x, y);
+
+	int i;
+	for (i = 0; i < MAX_MATRIX_DIM; i++){
+		//Check if there is any conflict
+		if (extended[i] & matrix[i])
+			return NULL;
+	}
+	return merge2Matrixes(matrix, extended);
+}
+
 void main(int argc, char* argv[]){
-	int fd;
-	if (fd = wiringPiSPISetup(0,1000000)<0)
-		printf("Setup failed\n");
-	printf("FD: %d", fd);
-	uint8_t buff[2];
-	//Set the BCD disabled
-	buff[0] = 0x9;
-	buff[1] = 0;
-	wiringPiSPIDataRW(0, buff, 2);
-	//set intensity
-	buff[0] = 0xA;
-	buff[1] = 0x8;
-	wiringPiSPIDataRW(0, buff, 2);
-	///scan limit regitser
-	buff[0] = 0xB;
-	buff[1] = 0xF;
-	wiringPiSPIDataRW(0,buff , 2);
-	//set shutdown to normal
-	//buff[0] = 0xC;
-	//buff[1] = 0x1;
+	int shape_x = 5, shape_y = 0;
+	initMatrix();
 	//uint8_t on[] = {0x01, 0x03}, off[] = {0xff, 0x0};
 	uint8_t shpmat[4]={0x07, 0x02, 0x00, 0x00}; 
 	//The matrix we want to send
@@ -77,16 +63,16 @@ void main(int argc, char* argv[]){
 	Shape* shp = shapeInit(shpmat, 2);
 	
 	uint8_t* m;
-	m = shapeExtend(shp);
+	m = placeShapeToMatrix(matr, shp, 2,2);
 	
-//	m = merge2Matrix(m, matrix2);
+//	m = merge2Shapes(m, matrix2);
 
 	int i;
 	while(1){
 		
 		sendMatrix(m);
-		if (shp->y <= 8)
-			m = shapeFall(shp);
+//		if (shp->y <= 8)
+//			m = shapeFall(shp);
 		sleep(1);
 	}
 }

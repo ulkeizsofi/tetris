@@ -1,8 +1,12 @@
 CC=gcc
+ifeq ($(PIBUILD),1)
+CCOPT=-D__PIBUILD__
 CFLAGS=-lwiringPi
-DEPS = shape.h
+else
+endif
+DEPS = shape.h matrixDrv.h
 
 %.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
-matrixmake: Matrix.o shape.o 
-	$(CC) -o matrixmake Matrix.o shape.o $(CFLAGS)
+	$(CC) $(CCOPT) -c -o $@ $< $(CFLAGS)
+all: Matrix.o shape.o matrixDrv.o
+	$(CC) $(CCOPT) -o matrixmake Matrix.o shape.o matrixDrv.o $(CFLAGS)
