@@ -6,25 +6,26 @@ Shape* shapeInit(uint8_t* shpmat){
 	int i;
 	Shape* shp;
 	shp = (Shape*)malloc(sizeof(Shape));
+	shp->width = 3;
+        shp->height = 2;
 	shp->shpMat = (uint8_t*)malloc(sizeof(uint8_t)*MAX_MATRIX_DIM);
 	for (i = 0; i < shp->height; i++){
 		shp->shpMat[i] = shpmat[i];
 	}
-	shp->width = 4;
-	shp->height = 4;
+	
 	return shp;
 }
 
-uint8_t* shapeToMatrix(Shape* shp, uint8_t x, uint8_t y){
+uint8_t* shapeToMatrix(Shape* shp, int8_t x, int8_t y){
 	uint8_t* extended = (uint8_t*)malloc(sizeof(uint8_t)*MAX_MATRIX_DIM);
 	int i;
 	//if it exceeds the dimensions of a matrix
-	if (x > MAX_MATRIX_DIM) x = MAX_MATRIX_DIM;
-	if (x - shp->width < 0) x = shp->width;
-	if (y + shp->height > MAX_MATRIX_DIM) y = MAX_MATRIX_DIM - shp->height;
+	if (x <= 0) x = 0;
+	if (x + shp->width < MAX_MATRIX_DIM) x = MAX_MATRIX_DIM - shp->width;
+	if (y + shp->height > MAX_MATRIX_DIM) return NULL;//y = MAX_MATRIX_DIM - shp->height;
 	for (i = 0; i < MAX_MATRIX_DIM; i++){
-		if (i <= y && i > y - MAX_SHAPE_MATRIX_DIM)
-			extended[i] = shp->shpMat[i-y+1] << x - shp->width;
+		if (i >= y && i < y + shp->height)
+			extended[i] = shp->shpMat[i-y] << x;
 		else{
 			extended[i] = 0x0;
 		}

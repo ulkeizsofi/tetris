@@ -1,4 +1,5 @@
 CC=gcc
+PIBUILD?=1
 ifeq ($(PIBUILD),1)
 CCOPT=-D__PIBUILD__
 CFLAGS=-lwiringPi

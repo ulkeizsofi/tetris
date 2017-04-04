@@ -20,6 +20,7 @@ void sendMatrix(uint8_t* matrix){
 	for (i = 0; i < 8; i++){
 		buff[1] = matrix[i];
 		buff[0] = i + 1;
+//		printf("%x\n", buff[1]);
 		wiringPiSPIDataRW(0, buff, 2);
 	}
 }
@@ -30,19 +31,29 @@ void initMatrix(){
 		printf("Setup failed\n");
 	printf("FD: %d", fd);
 	uint8_t buff[2];
+	//set shutdown to normal
+        buff[0] = 0xC;
+        buff[1] = 0x1;
+wiringPiSPIDataRW(0,buff , 2);
+	      buff[0] = 0xFF;
+	        buff[1] = 0x0;
+		wiringPiSPIDataRW(0,buff , 2);
+
 	//Set the BCD disabled
 	buff[0] = 0x9;
 	buff[1] = 0;
 	wiringPiSPIDataRW(0, buff, 2);
 	//set intensity
 	buff[0] = 0xA;
-	buff[1] = 0x8;
+	buff[1] = 0x1;
 	wiringPiSPIDataRW(0, buff, 2);
 	///scan limit regitser
 	buff[0] = 0xB;
 	buff[1] = 0xF;
 	wiringPiSPIDataRW(0,buff , 2);
-	//set shutdown to normal
-	//buff[0] = 0xC;
-	//buff[1] = 0x1;
+wiringPiSPIDataRW(0,buff , 2);
+//	buff[0] = 0xFF;
+//        buff[1] = 0xFF;
+//wiringPiSPIDataRW(0,buff , 2);
+
 }

@@ -13,9 +13,8 @@ typedef struct _Shape{
 	uint8_t* shpMat; 
 }Shape;
 
-Shape* shapeInit(uint8_t* shpmat, uint8_t line);
-uint8_t* shapeToMatrix(Shape* shp);
+Shape* shapeInit(uint8_t* shpmat);
 uint8_t* shapeFall(Shape* shp);
-uint8_t* shapeToMatrix(Shape* shp, uint8_t x, uint8_t y);
+uint8_t* shapeToMatrix(Shape* shp,int8_t x,int8_t y);
 
 #endif
