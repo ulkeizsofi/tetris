@@ -1,9 +1,10 @@
 CC=gcc
-PIBUILD?=1
+PIBUILD?=0
 ifeq ($(PIBUILD),1)
 CCOPT=-D__PIBUILD__
 CFLAGS=-lwiringPi -lncurses
 else
+CFLAGS=-lncurses
 endif
 DEPS = shape.h matrixDrv.h
 

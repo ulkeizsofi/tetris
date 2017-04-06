@@ -108,7 +108,7 @@ uint8_t tryMove(Moves move, uint8_t* matrix, Shape* shp, int8_t* shape_x,
 	}
 }
 
-Shape* createNewShape(int8_t* shape_x, int8_t* shape_y){
+Shape* createNewShape(int8_t* shape_x, int8_t* shape_y) {
 	uint8_t shpmat[4] = { 0x07, 0x02, 0x00, 0x00 };
 	Shape* shp = shapeInit(shpmat);
 	*shape_x = 0;
@@ -138,12 +138,12 @@ void main(int argc, char* argv[]) {
 
 	Shape* shp = createNewShape(&shape_x, &shape_y);
 	m = placeShapeToMatrix(map, shp, shape_x, shape_y);
-	if (m == NULL){
+	if (m == NULL) {
 		perror("Can't place to matrix\n");
 		return;
 	}
 	char key;
-	int i;
+	int i,r;
 	while (1) {
 		//If any key was entered
 		if (key = getch()) {
@@ -159,23 +159,31 @@ void main(int argc, char* argv[]) {
 		m = shapeDown(map, shp, shape_x, &shape_y);
 		if (m != NULL) {
 			sendMatrix(m);
-                        printf("%d\n",shape_y);
+			r = rand() % 2;
+			if (r == 0) {
+				printf("LEFT:\n");
+				tryMove(LEFT, map, shp, &shape_x, shape_y);
+			}
+			if (r == 1) {
+				printf("RIGHT:\n");
+				tryMove(RIGHT, map, shp, &shape_x, shape_y);
+			}
 			free(m);
 		} else {
-			
+
 			//try to undo the last fall
 			m = placeShapeToMatrix(map, shp, shape_x, shape_y - 1);
-			printf("V%d\n",shape_y);
 			assert(m);
 			sendMatrix(m);
 			free(shp);
-			free(m);
-			 free(map);
-                        map = m;
+			free(map);
+			map = m;
+
+			//free(m);
 			shp = createNewShape(&shape_x, &shape_y);
 			//Try to place to the map
 			m = placeShapeToMatrix(map, shp, shape_x, shape_y);
-			if (m == NULL){
+			if (m == NULL) {
 				free(m);
 				free(map);
 				game_over();

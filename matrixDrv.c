@@ -9,7 +9,13 @@
 #include <wiringPiSPI.h>
 #else
 #define wiringPiSPISetup(...) (0)
-#define wiringPiSPIDataRW(...) (0)
+#define wiringPiSPIDataRW(x,y,z)\
+	({\
+		uint8_t i;\
+    for(i=0x80;i!=0;i>>=1)\
+        printf("%c",(y[1]&i)?'1':'0');\
+    printf("\n");\
+	})
 #endif
 #include <stdint.h>
 #include "matrixDrv.h"
@@ -23,13 +29,14 @@ void sendMatrix(uint8_t* matrix){
 //		printf("%x\n", buff[1]);
 		wiringPiSPIDataRW(0, buff, 2);
 	}
+	printf("\n");
 }
 
 void initMatrix(){
 	int fd;
 	if (fd = wiringPiSPISetup(0,1000000)<0)
 		printf("Setup failed\n");
-	printf("FD: %d", fd);
+
 	uint8_t buff[2];
 	//set shutdown to normal
         buff[0] = 0xC;
