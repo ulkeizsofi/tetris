@@ -7,7 +7,7 @@
 #include "matrixDrv.h"
 #include <unistd.h>
 #include <assert.h>
-#include <conio.h>
+#include <curses.h>
 
 typedef enum {
 	RIGHT, LEFT, ROTATE
@@ -82,7 +82,7 @@ uint8_t tryMove(Moves move, uint8_t* matrix, Shape* shp, int8_t* shape_x,
 	uint8_t* m;
 	switch (move) {
 	case RIGHT:
-		m = shapeRight(matrix, shp, shape_x, *shape_y);
+		m = shapeRight(matrix, shp, shape_x, shape_y);
 		if (m != NULL) {
 			sendMatrix(m);
 			return 0;
@@ -92,7 +92,7 @@ uint8_t tryMove(Moves move, uint8_t* matrix, Shape* shp, int8_t* shape_x,
 		free(m);
 		break;
 	case LEFT:
-		m = shapeLeft(matrix, shp, shape_x, *shape_y);
+		m = shapeLeft(matrix, shp, shape_x, shape_y);
 		if (m != NULL) {
 			sendMatrix(m);
 			return 0;
@@ -146,28 +146,32 @@ void main(int argc, char* argv[]) {
 	int i;
 	while (1) {
 		//If any key was entered
-		if (_kbhit()) {
-			key = _getch();
-			if (key == 'a') {
-				if (!tryMove(LEFT, map, shp, &shape_x, &shape_y))
+		if (key = getch()) {
+			if (key == KEY_LEFT) {
+				if (!tryMove(LEFT, map, shp, &shape_x, shape_y))
 					printf("can't\n");
 			}
-			if (key == 's') {
-				if (!tryMove(RIGHT, map, shp, &shape_x, &shape_y))
+			if (key == KEY_RIGHT) {
+				if (!tryMove(RIGHT, map, shp, &shape_x, shape_y))
 					printf("can't\n");
 			}
 		}
 		m = shapeDown(map, shp, shape_x, &shape_y);
 		if (m != NULL) {
 			sendMatrix(m);
+                        printf("%d\n",shape_y);
 			free(m);
 		} else {
+			
 			//try to undo the last fall
 			m = placeShapeToMatrix(map, shp, shape_x, shape_y - 1);
+			printf("V%d\n",shape_y);
 			assert(m);
 			sendMatrix(m);
 			free(shp);
 			free(m);
+			 free(map);
+                        map = m;
 			shp = createNewShape(&shape_x, &shape_y);
 			//Try to place to the map
 			m = placeShapeToMatrix(map, shp, shape_x, shape_y);
@@ -176,9 +180,10 @@ void main(int argc, char* argv[]) {
 				free(map);
 				game_over();
 			}
+			sendMatrix(m);
 
-			free(map);
-			map = m;
+//			free(map);
+//			map = m;
 		}
 //		if (shp->y <= 8)
 //			m = shapeFall(shp);
