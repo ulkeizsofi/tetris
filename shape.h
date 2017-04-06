@@ -3,6 +3,7 @@
 
 #define  MAX_SHAPE_MATRIX_DIM 4
 #define MAX_MATRIX_DIM 8
+#define MAX_SHAPE_NO 10
 
 #include <stdint.h>
 
@@ -14,7 +15,7 @@ typedef struct _Shape{
 }Shape;
 
 Shape* shapeInit(uint8_t* shpmat);
-uint8_t* shapeFall(Shape* shp);
 uint8_t* shapeToMatrix(Shape* shp,int8_t x,int8_t y);
+Shape* shapeMatrixRotate(Shape* shp);
 
 #endif

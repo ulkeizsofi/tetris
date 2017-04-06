@@ -77,6 +77,20 @@ uint8_t* shapeDown(uint8_t* matrix, Shape* shp, int8_t shape_x, int8_t* shape_y)
 	return down;
 }
 
+uint8_t* shapeRotate(uint8_t* matrix, Shape** shp, int8_t shape_x,
+		int8_t shape_y) {
+	uint8_t* rotate;
+	Shape* shpHelp = shapeInit((*shp)->shpMat);
+	shpHelp = shapeMatrixRotate(*shp);
+	rotate = placeShapeToMatrix(matrix, shpHelp, shape_x, shape_y);
+
+	if (shpHelp == NULL) {
+		return NULL;
+	}
+	shp = &shpHelp;
+	return rotate;
+}
+
 uint8_t tryMove(Moves move, uint8_t* matrix, Shape* shp, int8_t* shape_x,
 		int8_t shape_y) {
 	uint8_t* m;
@@ -102,6 +116,15 @@ uint8_t tryMove(Moves move, uint8_t* matrix, Shape* shp, int8_t* shape_x,
 		free(m);
 		break;
 	case ROTATE:
+		m = shapeRotate(matrix, &shp, *shape_x, shape_y);
+		if (m != NULL) {
+
+			sendMatrix(m);
+			return 0;
+		} else {
+			return -1;
+		}
+		free(m);
 		break;
 	default:
 		break;
@@ -122,49 +145,45 @@ void main(int argc, char* argv[]) {
 	//uint8_t on[] = {0x01, 0x03}, off[] = {0xff, 0x0};
 
 	//The matrix we want to send
-	uint8_t matrix[8] = { 0xFF, 0x7F, 0x3F, 0x1F, 0x0F, 0x07, 0x03, 0x01 };
-
-	uint8_t matrix2[8] = { 0xFF, 0x7F, 0x3F, 0x1F, 0x0F, 0x07, 0x03, 0x80 };
-
-	uint8_t off[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	sendMatrix(off);
 	uint8_t *map;
-	uint8_t mapBuff[8] = { 0 };
-	map = (uint8_t*) malloc(sizeof(uint8_t) * MAX_MATRIX_DIM);
-	uint8_t matr[8] = { 0 };
+
+	map = (uint8_t*) calloc(MAX_MATRIX_DIM, sizeof(uint8_t));
+
 	//sendMatrix(matr);
 
 	uint8_t* m;
 
 	Shape* shp = createNewShape(&shape_x, &shape_y);
 	m = placeShapeToMatrix(map, shp, shape_x, shape_y);
+	tryMove(ROTATE, map, shp, &shape_x, shape_y);
+
 	if (m == NULL) {
 		perror("Can't place to matrix\n");
 		return;
 	}
 	char key;
-	int i,r;
+	int i, r;
 	while (1) {
 		//If any key was entered
-		if (key = getch()) {
-			if (key == KEY_LEFT) {
-				if (!tryMove(LEFT, map, shp, &shape_x, shape_y))
-					printf("can't\n");
-			}
-			if (key == KEY_RIGHT) {
-				if (!tryMove(RIGHT, map, shp, &shape_x, shape_y))
-					printf("can't\n");
-			}
-		}
+//		if (key = getch()) {
+//			if (key == KEY_LEFT) {
+//				if (!tryMove(LEFT, map, shp, &shape_x, shape_y))
+//					printf("can't\n");
+//			}
+//			if (key == KEY_RIGHT) {
+//				if (!tryMove(RIGHT, map, shp, &shape_x, shape_y))
+//					printf("can't\n");
+//			}
+//		}
 		m = shapeDown(map, shp, shape_x, &shape_y);
 		if (m != NULL) {
 			sendMatrix(m);
 			r = rand() % 2;
-			if (r == 0) {
+			if (r == 1) {
 				printf("LEFT:\n");
 				tryMove(LEFT, map, shp, &shape_x, shape_y);
 			}
-			if (r == 1) {
+			if (r == 0) {
 				printf("RIGHT:\n");
 				tryMove(RIGHT, map, shp, &shape_x, shape_y);
 			}

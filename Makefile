@@ -2,9 +2,9 @@ CC=gcc
 PIBUILD?=0
 ifeq ($(PIBUILD),1)
 CCOPT=-D__PIBUILD__
-CFLAGS=-lwiringPi -lncurses
+CFLAGS=-lwiringPi -lncurses -lm
 else
-CFLAGS=-lncurses
+CFLAGS=-lncurses -lm
 endif
 DEPS = shape.h matrixDrv.h
 
