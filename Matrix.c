@@ -178,7 +178,7 @@ void main(int argc, char* argv[]) {
 		m = shapeDown(map, shp, shape_x, &shape_y);
 		if (m != NULL) {
 			sendMatrix(m);
-			r = rand() % 2;
+			r = rand() % 3;
 			if (r == 1) {
 				printf("LEFT:\n");
 				tryMove(LEFT, map, shp, &shape_x, shape_y);
@@ -186,6 +186,10 @@ void main(int argc, char* argv[]) {
 			if (r == 0) {
 				printf("RIGHT:\n");
 				tryMove(RIGHT, map, shp, &shape_x, shape_y);
+			}
+			if (r == 2){
+				printf("ROTATE:\n");
+				tryMove(ROTATE, map, shp, &shape_x, shape_y);
 			}
 			free(m);
 		} else {
