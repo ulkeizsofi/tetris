@@ -42,24 +42,24 @@ void game_over(){
 	exit(0);
 }
 
-uint8_t* shapeRight(uint8_t* matrix, Shape* shp, int8_t shape_x, int8_t shape_y){
-	shape_x++;
-	uint8_t* right = placeShapeToMatrix(matrix, shp, shape_x, shape_y);
+uint8_t* shapeRight(uint8_t* matrix, Shape* shp, int8_t* shape_x, int8_t shape_y){
+	(*shape_x)++;
+	uint8_t* right = placeShapeToMatrix(matrix, shp, *shape_x, shape_y);
 	if (right == NULL)
 		return NULL;
 	return right;
 }
 
-uint8_t* shapeDown(uint8_t* matrix, Shape* shp, int8_t shape_x, int8_t shape_y){
-	shape_y++;
-	uint8_t* down = placeShapeToMatrix(matrix, shp, shape_x, shape_y);
+uint8_t* shapeDown(uint8_t* matrix, Shape* shp, int8_t shape_x, int8_t* shape_y){
+	(*shape_y)++;
+	uint8_t* down = placeShapeToMatrix(matrix, shp, shape_x, *shape_y);
 	if (down == NULL)
 		return NULL;
 	return down;
 }
 
 void main(int argc, char* argv[]){
-	int8_t shape_x = 0, shape_y = -1;
+	int8_t shape_x = -1, shape_y = -1;
 	initMatrix();
 	//uint8_t on[] = {0x01, 0x03}, off[] = {0xff, 0x0};
 	uint8_t shpmat[4]={0x07, 0x02, 0x00, 0x00}; 
@@ -101,9 +101,17 @@ void main(int argc, char* argv[]){
 
 	int i;
 	while(1){
-	m = shapeDown(map, shp, shape_x,shape_y);
+	m = shapeDown(map, shp, shape_x,&shape_y);
 	if (m!=NULL){	
-		sendMatrix(m);
+		printf("%d\n",shape_x);
+		m = shapeRight(map, shp, &shape_x, shape_y);
+		if (m != NULL) 
+			sendMatrix(m);
+		else{
+			m = placeShapeToMatrix(map, shp, shape_x - 1, shape_y);
+			sendMatrix(m);
+			shape_x -= 1;
+		}
 		free(m);
 	}
 	else{
@@ -114,6 +122,7 @@ void main(int argc, char* argv[]){
 		assert(m);
 		sendMatrix(m);
 		shape_y = -1;
+		shape_x = -1;
 
 		free(map);
 		map = m;

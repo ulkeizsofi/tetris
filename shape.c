@@ -21,7 +21,7 @@ uint8_t* shapeToMatrix(Shape* shp, int8_t x, int8_t y){
 	int i;
 	//if it exceeds the dimensions of a matrix
 	if (x <= 0) x = 0;
-	if (x + shp->width < MAX_MATRIX_DIM) x = MAX_MATRIX_DIM - shp->width;
+	if (x + shp->width > MAX_MATRIX_DIM) x = MAX_MATRIX_DIM - shp->width;
 	if (y + shp->height > MAX_MATRIX_DIM) return NULL;//y = MAX_MATRIX_DIM - shp->height;
 	for (i = 0; i < MAX_MATRIX_DIM; i++){
 		if (i >= y && i < y + shp->height)
