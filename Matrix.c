@@ -92,13 +92,12 @@ uint8_t* shapeRotate(uint8_t* matrix, Shape** shp, int8_t shape_x,
 }
 
 uint8_t tryMove(Moves move, uint8_t* matrix, Shape* shp, int8_t* shape_x,
-		int8_t shape_y) {
+		int8_t *shape_y) {
 	uint8_t* m;
 	switch (move) {
 	case RIGHT:
-		m = shapeRight(matrix, shp, shape_x, shape_y);
+		m = shapeRight(matrix, shp, shape_x, *shape_y);
 		if (m != NULL) {
-			sendMatrix(m);
 			return 0;
 		} else {
 			return -1;
@@ -106,9 +105,8 @@ uint8_t tryMove(Moves move, uint8_t* matrix, Shape* shp, int8_t* shape_x,
 		free(m);
 		break;
 	case LEFT:
-		m = shapeLeft(matrix, shp, shape_x, shape_y);
+		m = shapeLeft(matrix, shp, shape_x, *shape_y);
 		if (m != NULL) {
-			sendMatrix(m);
 			return 0;
 		} else {
 			return -1;
@@ -116,10 +114,8 @@ uint8_t tryMove(Moves move, uint8_t* matrix, Shape* shp, int8_t* shape_x,
 		free(m);
 		break;
 	case ROTATE:
-		m = shapeRotate(matrix, &shp, *shape_x, shape_y);
+		m = shapeRotate(matrix, &shp, *shape_x, *shape_y);
 		if (m != NULL) {
-
-			sendMatrix(m);
 			return 0;
 		} else {
 			return -1;
@@ -155,7 +151,6 @@ void main(int argc, char* argv[]) {
 
 	Shape* shp = createNewShape(&shape_x, &shape_y);
 	m = placeShapeToMatrix(map, shp, shape_x, shape_y);
-	tryMove(ROTATE, map, shp, &shape_x, shape_y);
 
 	if (m == NULL) {
 		perror("Can't place to matrix\n");
@@ -181,15 +176,15 @@ void main(int argc, char* argv[]) {
 			r = rand() % 3;
 			if (r == 1) {
 				printf("LEFT:\n");
-				tryMove(LEFT, map, shp, &shape_x, shape_y);
+				tryMove(LEFT, map, shp, &shape_x, &shape_y);
 			}
 			if (r == 0) {
 				printf("RIGHT:\n");
-				tryMove(RIGHT, map, shp, &shape_x, shape_y);
+				tryMove(RIGHT, map, shp, &shape_x, &shape_y);
 			}
 			if (r == 2){
 				printf("ROTATE:\n");
-				tryMove(ROTATE, map, shp, &shape_x, shape_y);
+				tryMove(ROTATE, map, shp, &shape_x, &shape_y);
 			}
 			free(m);
 		} else {
