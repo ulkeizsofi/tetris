@@ -24,6 +24,10 @@ void createShapeVector(){
 	shpmat = (uint8_t**)malloc(noShapes * sizeof(uint8_t*));
 	for (i = 0; i < noShapes; i++){
 		shpmat[i] = (uint8_t*)calloc( MAX_MATRIX_DIM, sizeof(uint8_t));
+		if (shpmat[i] == NULL){
+					perror("Error at malloc\n");
+					return;
+		}
 	}
 	shpmat[0][0] = 0x07; shpmat[0][1] = 0x02; shpmat[0][2] = 0x00; shpmat[0][3] = 0x00;
 	shpmat[1][0] = 0x07; shpmat[1][1] = 0x00; shpmat[1][2] = 0x00; shpmat[1][3] = 0x00;
@@ -33,6 +37,10 @@ void createShapeVector(){
 	for (i = 0; i < noShapes; i++){
 
 		shpVect[i] = shapeInit(shpmat[i]);
+		if (shpVect[i] == NULL){
+			perror("Error at malloc\n");
+			return;
+		}
 	}
 	vShapes = shpVect;
 }
@@ -65,6 +73,10 @@ Shape* shapeInit(uint8_t* shpmat){
 	int i;
 	Shape* shp;
 	shp = (Shape*)malloc(sizeof(Shape));
+	if (shp == NULL){
+		perror("Error at malloc\n");
+		return NULL;
+	}
 	shp->width = calculateWidth(shpmat);
     shp->height = calculateHeigth(shpmat);
     printf("WIDTH: %d HEIGHT: %d\n", shp->width, shp->height);
@@ -77,9 +89,12 @@ Shape* shapeInit(uint8_t* shpmat){
 }
 
 Shape* shapeGenerator(){
-	if (noShapes == 0)
+	if (noShapes == 0){
+		printf("EXITTED\n");
 		exit(1);
+	}
 	uint8_t random = rand() % noShapes;
+	printf("GEN: %d\n",random);
 	return vShapes[random];
 }
 
