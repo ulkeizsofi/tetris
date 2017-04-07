@@ -125,7 +125,6 @@ uint8_t tryMove(Moves move, uint8_t* matrix, Shape* shp, int8_t* shape_x,
 void createNewShape(Shape** shp, int8_t* shape_x, int8_t* shape_y) {
 
 	*shp = shapeGenerator();
-	sendMatrix((*shp)->shpMat);
 	*shape_x = 0;
 	*shape_y = 0;
 }
@@ -183,10 +182,10 @@ void main(int argc, char* argv[]) {
 
 			//try to undo the last fall
 			m = placeShapeToMatrix(map, shp, shape_x, shape_y);
-			printf("X: %d, Y: %d\n", shape_x,shape_y);
+
 			assert(m);
 			sendMatrix(m);
-			free(shp);
+			//free(shp);
 			free(map);
 			map = m;
 
