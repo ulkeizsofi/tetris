@@ -70,66 +70,62 @@ uint8_t* shapeRight(uint8_t* matrix, Shape* shp, int8_t* shape_x,
 }
 
 uint8_t* shapeDown(uint8_t* matrix, Shape* shp, int8_t shape_x, int8_t* shape_y) {
+	printf("X: %d, Y:%d\n",shape_x, *shape_y);
 	(*shape_y)++;
 	uint8_t* down = placeShapeToMatrix(matrix, shp, shape_x, *shape_y);
-	if (down == NULL)
+	if (down == NULL){
+		(*shape_y)--;
 		return NULL;
+	}
 	return down;
 }
 
 uint8_t* shapeRotate(uint8_t* matrix, Shape** shp, int8_t shape_x,
 		int8_t shape_y) {
 	uint8_t* rotate;
-	Shape* shpHelp = shapeInit((*shp)->shpMat);
+	Shape* shpHelp;
 	shpHelp = shapeMatrixRotate(*shp);
 	rotate = placeShapeToMatrix(matrix, shpHelp, shape_x, shape_y);
 
-	if (shpHelp == NULL) {
+	if (rotate == NULL) {
 		return NULL;
 	}
-	shp = &shpHelp;
+//	free((*shp)->shpMat);
+//	free(*shp);
+	*shp = shpHelp;
 	return rotate;
 }
 
 uint8_t tryMove(Moves move, uint8_t* matrix, Shape* shp, int8_t* shape_x,
 		int8_t *shape_y) {
 	uint8_t* m;
+	printf("X: %d, Y:%d\n",*shape_x, *shape_y);
 	switch (move) {
 	case RIGHT:
 		m = shapeRight(matrix, shp, shape_x, *shape_y);
-		if (m != NULL) {
-			return 0;
-		} else {
-			return -1;
-		}
-		free(m);
 		break;
 	case LEFT:
 		m = shapeLeft(matrix, shp, shape_x, *shape_y);
-		if (m != NULL) {
-			return 0;
-		} else {
-			return -1;
-		}
-		free(m);
 		break;
 	case ROTATE:
 		m = shapeRotate(matrix, &shp, *shape_x, *shape_y);
-		if (m != NULL) {
-			return 0;
-		} else {
-			return -1;
-		}
-		free(m);
+
 		break;
 	default:
 		break;
 	}
+	if (m != NULL) {
+		return 0;
+	} else {
+		return -1;
+	}
+	free(m);
 }
 
 Shape* createNewShape(int8_t* shape_x, int8_t* shape_y) {
-	uint8_t shpmat[4] = { 0x07, 0x02, 0x00, 0x00 };
-	Shape* shp = shapeInit(shpmat);
+
+	Shape* shp = shapeGenerator();
+	sendMatrix(shp->shpMat);
 	*shape_x = 0;
 	*shape_y = 0;
 	return shp;
@@ -138,6 +134,7 @@ Shape* createNewShape(int8_t* shape_x, int8_t* shape_y) {
 void main(int argc, char* argv[]) {
 	int8_t shape_x = 0, shape_y = 0;
 	initMatrix();
+	createShapeVector();
 	//uint8_t on[] = {0x01, 0x03}, off[] = {0xff, 0x0};
 
 	//The matrix we want to send
@@ -150,6 +147,7 @@ void main(int argc, char* argv[]) {
 	uint8_t* m;
 
 	Shape* shp = createNewShape(&shape_x, &shape_y);
+	sendMatrix(shp->shpMat);
 	m = placeShapeToMatrix(map, shp, shape_x, shape_y);
 
 	if (m == NULL) {
@@ -171,26 +169,22 @@ void main(int argc, char* argv[]) {
 //			}
 //		}
 		m = shapeDown(map, shp, shape_x, &shape_y);
+		printf("X: %d, Y: %d\n", shape_x,shape_y);
+
 		if (m != NULL) {
 			sendMatrix(m);
 			r = rand() % 3;
-			if (r == 1) {
-				printf("LEFT:\n");
-				tryMove(LEFT, map, shp, &shape_x, &shape_y);
-			}
-			if (r == 0) {
-				printf("RIGHT:\n");
-				tryMove(RIGHT, map, shp, &shape_x, &shape_y);
-			}
-			if (r == 2){
-				printf("ROTATE:\n");
-				tryMove(ROTATE, map, shp, &shape_x, &shape_y);
-			}
+			printf("type %d:",r);
+			if (tryMove((Moves)r, map, shp, &shape_x, &shape_y) == 0)
+				printf("OK\n");
+			else
+				printf("NOK\n");
 			free(m);
 		} else {
 
 			//try to undo the last fall
-			m = placeShapeToMatrix(map, shp, shape_x, shape_y - 1);
+			m = placeShapeToMatrix(map, shp, shape_x, shape_y);
+			printf("X: %d, Y: %d\n", shape_x,shape_y);
 			assert(m);
 			sendMatrix(m);
 			free(shp);

@@ -17,5 +17,7 @@ typedef struct _Shape{
 Shape* shapeInit(uint8_t* shpmat);
 uint8_t* shapeToMatrix(Shape* shp,int8_t x,int8_t y);
 Shape* shapeMatrixRotate(Shape* shp);
+Shape* shapeGenerator();
+void createShapeVector();
 
 #endif
