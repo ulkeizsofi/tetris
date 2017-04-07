@@ -122,13 +122,12 @@ uint8_t tryMove(Moves move, uint8_t* matrix, Shape* shp, int8_t* shape_x,
 	free(m);
 }
 
-Shape* createNewShape(int8_t* shape_x, int8_t* shape_y) {
+void createNewShape(Shape** shp, int8_t* shape_x, int8_t* shape_y) {
 
-	Shape* shp = shapeGenerator();
-	sendMatrix(shp->shpMat);
+	*shp = shapeGenerator();
+	sendMatrix((*shp)->shpMat);
 	*shape_x = 0;
 	*shape_y = 0;
-	return shp;
 }
 
 void main(int argc, char* argv[]) {
@@ -145,8 +144,8 @@ void main(int argc, char* argv[]) {
 	//sendMatrix(matr);
 
 	uint8_t* m;
-
-	Shape* shp = createNewShape(&shape_x, &shape_y);
+	Shape* shp;
+	createNewShape(&shp, &shape_x, &shape_y);
 	sendMatrix(shp->shpMat);
 	m = placeShapeToMatrix(map, shp, shape_x, shape_y);
 
@@ -192,7 +191,7 @@ void main(int argc, char* argv[]) {
 			map = m;
 
 			//free(m);
-			shp = createNewShape(&shape_x, &shape_y);
+			createNewShape(&shp, &shape_x, &shape_y);
 			//Try to place to the map
 			m = placeShapeToMatrix(map, shp, shape_x, shape_y);
 			if (m == NULL) {
