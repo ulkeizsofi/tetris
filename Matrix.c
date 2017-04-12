@@ -9,10 +9,17 @@
 #include <assert.h>
 #include <curses.h>
 #include <time.h>
+#include <signal.h>
+#include <sys/time.h>
 
 typedef enum {
 	DOWN, RIGHT, LEFT, ROTATE
 } Moves;
+
+int8_t x = 0, y = 0;
+uint8_t *map;
+uint8_t* m;
+Shape* shape;
 
 void merge2Matrixes(uint8_t* m1, uint8_t* m2, uint8_t** matrix) {
 
@@ -22,10 +29,11 @@ void merge2Matrixes(uint8_t* m1, uint8_t* m2, uint8_t** matrix) {
 	}
 }
 
-int placeShapeToMatrix(uint8_t** resoult, uint8_t* matrix, Shape* shp, int8_t x, int8_t y) {
-	uint8_t *extended = (uint8_t*)malloc(sizeof(uint8_t) * MAX_MATRIX_DIM);
+int placeShapeToMatrix(uint8_t** resoult, uint8_t* matrix, Shape* shp, int8_t x,
+		int8_t y) {
+	uint8_t *extended = (uint8_t*) malloc(sizeof(uint8_t) * MAX_MATRIX_DIM);
 
-	if (shapeToMatrix(&extended, shp, x, y) < 0){
+	if (shapeToMatrix(&extended, shp, x, y) < 0) {
 		*resoult = NULL;
 		return -1;
 	}
@@ -49,9 +57,10 @@ void game_over() {
 	exit(0);
 }
 
-int shapeLeft(uint8_t **resoult, uint8_t* matrix, Shape* shp, int8_t* shape_x, int8_t shape_y) {
+int shapeLeft(uint8_t **resoult, uint8_t* matrix, Shape* shp, int8_t* shape_x,
+		int8_t shape_y) {
 	(*shape_x)++;
-	if (placeShapeToMatrix(resoult, matrix, shp, *shape_x, shape_y) < 0 ) {
+	if (placeShapeToMatrix(resoult, matrix, shp, *shape_x, shape_y) < 0) {
 		//Unchange
 		(*shape_x)--;
 		return -1;
@@ -63,7 +72,8 @@ int shapeRight(uint8_t** resoult, uint8_t* matrix, Shape* shp, int8_t* shape_x,
 		int8_t shape_y) {
 	(*shape_x)--;
 
-	if (placeShapeToMatrix(resoult, matrix, shp, *shape_x, shape_y) < 0 || *shape_x < 0) {
+	if (placeShapeToMatrix(resoult, matrix, shp, *shape_x, shape_y) < 0
+			|| *shape_x < 0) {
 		(*shape_x)++;
 		*resoult = NULL;
 		return -1;
@@ -71,10 +81,11 @@ int shapeRight(uint8_t** resoult, uint8_t* matrix, Shape* shp, int8_t* shape_x,
 	return 0;
 }
 
-int shapeDown(uint8_t** resoult, uint8_t* matrix, Shape* shp, int8_t shape_x, int8_t* shape_y) {
-	printf("X: %d, Y:%d\n",shape_x, *shape_y);
+int shapeDown(uint8_t** resoult, uint8_t* matrix, Shape* shp, int8_t shape_x,
+		int8_t* shape_y) {
+	printf("X: %d, Y:%d\n", shape_x, *shape_y);
 	(*shape_y)++;
-	if (placeShapeToMatrix(resoult, matrix, shp, shape_x, *shape_y) < 0){
+	if (placeShapeToMatrix(resoult, matrix, shp, shape_x, *shape_y) < 0) {
 		(*shape_y)--;
 		*resoult = NULL;
 		return -1;
@@ -99,8 +110,8 @@ int shapeRotate(uint8_t** resoult, uint8_t* matrix, Shape** shp, int8_t shape_x,
 
 uint8_t tryMove(Moves move, uint8_t* matrix, Shape* shp, int8_t* shape_x,
 		int8_t *shape_y) {
-	uint8_t* m = (uint8_t*)malloc(sizeof(uint8_t) * MAX_MATRIX_DIM);
-	printf("TRYMOVE: X: %d, Y:%d",*shape_x, *shape_y);
+	uint8_t* m = (uint8_t*) malloc(sizeof(uint8_t) * MAX_MATRIX_DIM);
+	printf("TRYMOVE: X: %d, Y:%d", *shape_x, *shape_y);
 	switch (move) {
 	case DOWN:
 		shapeDown(&m, matrix, shp, *shape_x, shape_y);
@@ -133,10 +144,10 @@ void createNewShape(Shape** shp, int8_t* shape_x, int8_t* shape_y) {
 	*shape_y = 0;
 }
 
-void removeFullRows(uint8_t** matrix){
+void removeFullRows(uint8_t** matrix) {
 	int i;
-	for (i = MAX_MATRIX_DIM - 1; i > 0; i--){
-		if (((*matrix)[i] & 0xFF) == 0xFF){
+	for (i = MAX_MATRIX_DIM - 1; i > 0; i--) {
+		if (((*matrix)[i] & 0xFF) == 0xFF) {
 			(*matrix)[i] = (*matrix)[i - 1];
 		}
 	}
@@ -144,82 +155,123 @@ void removeFullRows(uint8_t** matrix){
 		(*matrix)[0] = 0;
 }
 
+void shapeDownHandler(int sgn) {
+	printf("DOWN:");
+	if (tryMove(DOWN, map, shape, &x, &y)) {
+
+		int r = rand() % 3 + 1;
+		printf("type %d:", r);
+		if (tryMove((Moves) r, map, shape, &x, &y)) {
+			printf("OK\n");
+		} else
+			printf("NOK\n");
+
+		placeShapeToMatrix(&m, map, shape, x, y);
+		sendMatrix(m);
+
+	} else {
+
+		//try to undo the last fall
+		placeShapeToMatrix(&map, map, shape, x, y);
+
+		assert(m);
+		sendMatrix(m);
+		//free(shp);
+
+		*map = *m;
+
+		//free(m);
+		createNewShape(&shape, &x, &y);
+		//Try to place to the map
+		//Realloc the m to be sure nothing remains
+		m = memset(m, 0, MAX_MATRIX_DIM * sizeof(uint8_t));
+		placeShapeToMatrix(&m, map, shape, x, y);
+		removeFullRows(&map);
+
+		if (m == NULL) {
+			game_over();
+		}
+		sendMatrix(m);
+
+	}
+	struct itimerval timer;
+	/* Configure the timer to expire after 250 msec... */
+	timer.it_value.tv_sec = 1;
+	timer.it_value.tv_usec = 0;
+	/* ... and every 250 msec after that. */
+	timer.it_interval.tv_sec = 1;
+	timer.it_interval.tv_usec = 0;
+	/* Start a virtual timer. It counts down whenever this process is
+	 executing. */
+	setitimer(ITIMER_REAL, &timer, NULL);
+}
+
 void main(int argc, char* argv[]) {
-	int8_t shape_x = 0, shape_y = 0;
 	initMatrix();
-	srand ( time(NULL) );
+	srand(time(NULL));
 	createShapeVector();
-	//uint8_t on[] = {0x01, 0x03}, off[] = {0xff, 0x0};
+
+	//Set signal handler
+//	const struct sigaction sgAct;
+//	sgAct.sa_sigaction = shapeDownHandler;
+//	if (signal(SIGALRM, shapeDownHandler) == SIG_ERR) {
+//		perror("Error setting sigaction\n");
+//		return;
+//	}
 
 	//The map on which the shapes are
-	uint8_t *map;
 	map = (uint8_t*) calloc(MAX_MATRIX_DIM, sizeof(uint8_t));
 
 	//The temporar matrix
-	uint8_t* m = (uint8_t*) calloc(MAX_MATRIX_DIM, sizeof(uint8_t));
+	m = (uint8_t*) calloc(MAX_MATRIX_DIM, sizeof(uint8_t));
 
 	//The shape we use in every step
-	Shape* shp;
-	createNewShape(&shp, &shape_x, &shape_y);
-	sendMatrix(shp->shpMat);
+	createNewShape(&shape, &x, &y);
+	sendMatrix(shape->shpMat);
 
-	if (placeShapeToMatrix(&m, map, shp, shape_x, shape_y) < 0) {
+	if (placeShapeToMatrix(&m, map, shape, x, y) < 0) {
 		perror("Can't place to matrix\n");
 		return;
 	}
+
+	//Settimer
+	struct sigaction sa;
+	struct itimerval timer;
+
+	/* Install timer_handler as the signal handler for SIGVTALRM. */
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = &shapeDownHandler;
+	sigaction(SIGALRM, &sa, NULL);
+
+	/* Configure the timer to expire after 250 msec... */
+	timer.it_value.tv_sec = 2;
+	timer.it_value.tv_usec = 0;
+	/* ... and every 250 msec after that. */
+	timer.it_interval.tv_sec = 2;
+	timer.it_interval.tv_usec = 0;
+	/* Start a virtual timer. It counts down whenever this process is
+	 executing. */
+	setitimer(ITIMER_REAL, &timer, NULL);
+
 	char key;
 	int i, r;
 	while (1) {
+		//setitimer(ITIMER_REAL, &tmval, NULL);
 		//If any key was entered
-//		if (key = getch()) {
-//			if (key == KEY_LEFT) {
-//				if (!tryMove(LEFT, map, shp, &shape_x, shape_y))
-//					printf("can't\n");
-//			}
-//			if (key == KEY_RIGHT) {
-//				if (!tryMove(RIGHT, map, shp, &shape_x, shape_y))
-//					printf("can't\n");
-//			}
-//		}
-		printf("DOWN:");
-		if (tryMove(DOWN, map, shp, &shape_x, &shape_y)){
-
-			r = rand() % 3 + 1;
-			printf("type %d:",r);
-			if (tryMove((Moves)r, map, shp, &shape_x, &shape_y)){
-				printf("OK\n");
+		if (key = getch()) {
+			if (key == 'a') {
+				if (!tryMove(LEFT, map, shape, &x, &y))
+					printf("can't\n");
 			}
-			else printf("NOK\n");
-
-			placeShapeToMatrix(&m, map, shp, shape_x, shape_y);
-			sendMatrix(m);
-
-		} else {
-
-			//try to undo the last fall
-			placeShapeToMatrix(&map, map, shp, shape_x, shape_y);
-
-			assert(m);
-			sendMatrix(m);
-			//free(shp);
-
-			*map = *m;
-
-			//free(m);
-			createNewShape(&shp, &shape_x, &shape_y);
-			//Try to place to the map
-			//Realloc the m to be sure nothing remains
-			m = memset(m, 0, MAX_MATRIX_DIM * sizeof(uint8_t));
-			placeShapeToMatrix(&m, map, shp, shape_x, shape_y);
-			removeFullRows(&map);
-
-			if (m == NULL) {
-				game_over();
+			if (key == 's') {
+				if (!tryMove(RIGHT, map, shape, &x, &y))
+					printf("can't\n");
 			}
-			sendMatrix(m);
-
+			if (key == 'w') {
+				if (!tryMove(ROTATE, map, shape, &x, &y))
+					printf("can't\n");
+			}
 		}
-		sleep(1);
 	}
 }
 
