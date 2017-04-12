@@ -132,6 +132,17 @@ void createNewShape(Shape** shp, int8_t* shape_x, int8_t* shape_y) {
 	*shape_y = 0;
 }
 
+void removeFullRows(uint8_t** matrix){
+	int i;
+	for (i = MAX_MATRIX_DIM - 1; i > 0; i--){
+		if ((*matrix)[i] & 0xFF == 0xFF){
+			(*matrix)[i] = (*matrix)[i - 1];
+		}
+	}
+	if ((*matrix)[0] & 0xFF == 0xFF)
+		(*matrix)[0] = 0;
+}
+
 void main(int argc, char* argv[]) {
 	int8_t shape_x = 0, shape_y = 0;
 	initMatrix();
@@ -198,6 +209,7 @@ void main(int argc, char* argv[]) {
 			//Realloc the m to be sure nothing remains
 			m = memset(m, 0, MAX_MATRIX_DIM * sizeof(uint8_t));
 			placeShapeToMatrix(&m, map, shp, shape_x, shape_y);
+			removeFullRows(&map);
 
 			if (m == NULL) {
 				game_over();
