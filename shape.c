@@ -98,24 +98,23 @@ Shape* shapeGenerator(){
 	return vShapes[random];
 }
 
-uint8_t* shapeToMatrix(Shape* shp, int8_t x, int8_t y){
-	uint8_t* extended = (uint8_t*)malloc(sizeof(uint8_t)*MAX_MATRIX_DIM);
+int shapeToMatrix(uint8_t** extended, Shape* shp, int8_t x, int8_t y){
 	int i;
 	//if it exceeds the dimensions of a matrix
 	if (x <= 0) x = 0;
 	if (x + shp->width > MAX_MATRIX_DIM) x = MAX_MATRIX_DIM - shp->width;
 	if (y + shp->height > MAX_MATRIX_DIM){
 		printf("%d + %d\n",y,shp->height);
-		return NULL;//y = MAX_MATRIX_DIM - shp->height;
+		return -1;//y = MAX_MATRIX_DIM - shp->height;
 	}
 	for (i = 0; i < MAX_MATRIX_DIM; i++){
 		if (i >= y && i < y + shp->height)
-			extended[i] = shp->shpMat[i-y] << x;
+			(*extended)[i] = shp->shpMat[i-y] << x;
 		else{
-			extended[i] = 0x0;
+			(*extended)[i] = 0x0;
 		}
 	}
-	return extended;
+	return 0;
 }
 
 
@@ -139,4 +138,13 @@ Shape* shapeMatrixRotate(Shape* shp){
 	newShape->height = shp->width;
 	newShape->width = shp->height;
 	return newShape;
+}
+
+void copyShape(Shape* from, Shape **to){
+	(*to)->height = from->height;
+	(*to)->width = from->width;
+	int i;
+	for (i = 0; i < from->height; i++){
+		(*to)->shpMat[i] = from->shpMat[i];
+	}
 }
