@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <curses.h>
+#include <time.h>
 
 typedef enum {
 	DOWN, RIGHT, LEFT, ROTATE
@@ -135,17 +136,18 @@ void createNewShape(Shape** shp, int8_t* shape_x, int8_t* shape_y) {
 void removeFullRows(uint8_t** matrix){
 	int i;
 	for (i = MAX_MATRIX_DIM - 1; i > 0; i--){
-		if ((*matrix)[i] & 0xFF == 0xFF){
+		if (((*matrix)[i] & 0xFF) == 0xFF){
 			(*matrix)[i] = (*matrix)[i - 1];
 		}
 	}
-	if ((*matrix)[0] & 0xFF == 0xFF)
+	if (((*matrix)[0] & 0xFF) == 0xFF)
 		(*matrix)[0] = 0;
 }
 
 void main(int argc, char* argv[]) {
 	int8_t shape_x = 0, shape_y = 0;
 	initMatrix();
+	srand ( time(NULL) );
 	createShapeVector();
 	//uint8_t on[] = {0x01, 0x03}, off[] = {0xff, 0x0};
 
