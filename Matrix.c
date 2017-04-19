@@ -73,16 +73,16 @@ void main(int argc, char* argv[]) {
 		//If any key was entered
 		if (scanf("%c", &key)) {
 			if (key == 'a') {
-				if (!tryMove(LEFT, map, shape, &x, &y))
-					printf("can't\n");
+				if (tryMove(LEFT, map, shape, &x, &y))
+					sendMatrix(map);
 			}
 			if (key == 's') {
-				if (!tryMove(RIGHT, map, shape, &x, &y))
-					printf("can't\n");
+				if (tryMove(RIGHT, map, shape, &x, &y))
+					sendMatrix(map);
 			}
 			if (key == 'w') {
-				if (!tryMove(ROTATE, map, shape, &x, &y))
-					printf("can't\n");
+				if (tryMove(ROTATE, map, shape, &x, &y))
+					sendMatrix(map);
 			}
 		}
 	}
