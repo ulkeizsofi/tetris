@@ -126,7 +126,7 @@ Shape* shapeMatrixRotate(Shape* shp){
 		for(j = shp->height - 1; j >= 0; j--){
 			//The i-th bit of the shpMat[j]
 			//From a coloumn of shpMat we construct a number and place in the appropriate line of newShapeMat
-			newShape->shpMat[i] |= ((shp->shpMat[j] >> i) & 1) << j;
+			newShape->shpMat[i] |= ((shp->shpMat[j] >> i) & 1)<< (shp->height - j);
 		}
 //		newShape->shpMat[i] = helpNo;
 //		helpNo = 0;
