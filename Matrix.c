@@ -204,14 +204,6 @@ void main(int argc, char* argv[]) {
 	srand(time(NULL));
 	createShapeVector();
 
-	//Set signal handler
-//	const struct sigaction sgAct;
-//	sgAct.sa_sigaction = shapeDownHandler;
-//	if (signal(SIGALRM, shapeDownHandler) == SIG_ERR) {
-//		perror("Error setting sigaction\n");
-//		return;
-//	}
-
 	//The map on which the shapes are
 	map = (uint8_t*) calloc(MAX_MATRIX_DIM, sizeof(uint8_t));
 
@@ -236,13 +228,13 @@ void main(int argc, char* argv[]) {
 	sa.sa_handler = &shapeDownHandler;
 	sigaction(SIGALRM, &sa, NULL);
 
-	/* Configure the timer to expire after 250 msec... */
+	/* Configure the timer to expire after 2 sec... */
 	timer.it_value.tv_sec = 2;
 	timer.it_value.tv_usec = 0;
-	/* ... and every 250 msec after that. */
+	/* ... and every 2 sec after that. */
 	timer.it_interval.tv_sec = 2;
 	timer.it_interval.tv_usec = 0;
-	/* Start a virtual timer. It counts down whenever this process is
+	/* Start a real timer. It counts down whenever this process is
 	 executing. */
 	setitimer(ITIMER_REAL, &timer, NULL);
 
@@ -251,7 +243,7 @@ void main(int argc, char* argv[]) {
 	while (1) {
 		//setitimer(ITIMER_REAL, &tmval, NULL);
 		//If any key was entered
-		if (key = (char)getchar()) {
+		if (scanf("%c",&key)) {
 			if (key == 'a') {
 				if (!tryMove(LEFT, map, shape, &x, &y))
 					printf("can't\n");
