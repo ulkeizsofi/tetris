@@ -20,6 +20,85 @@ int8_t x = 0, y = 0;
 uint8_t *map;
 uint8_t* m;
 Shape* shape;
+struct itimerval timer;
+
+void setTimer(int sec);
+
+void merge2Matrixes(uint8_t* m1, uint8_t* m2, uint8_t** matrix);
+int placeShapeToMatrix(uint8_t** resoult, uint8_t* matrix, Shape* shp, int8_t x,int8_t y) ;
+void game_over();
+int shapeLeft(uint8_t **resoult, uint8_t* matrix, Shape* shp, int8_t* shape_x,int8_t shape_y);
+int shapeRight(uint8_t** resoult, uint8_t* matrix, Shape* shp, int8_t* shape_x,	int8_t shape_y) ;
+int shapeDown(uint8_t** resoult, uint8_t* matrix, Shape* shp, int8_t shape_x,int8_t* shape_y) ;
+int shapeRotate(uint8_t** resoult, uint8_t* matrix, Shape** shp, int8_t shape_x,int8_t shape_y) ;
+uint8_t tryMove(Moves move, uint8_t* matrix, Shape* shp, int8_t* shape_x,int8_t *shape_y) ;
+void createNewShape(Shape** shp, int8_t* shape_x, int8_t* shape_y) ;
+void removeFullRows(uint8_t** matrix) ;
+void shapeDownHandler(int sgn) ;
+
+void main(int argc, char* argv[]) {
+	initMatrix();
+	srand(time(NULL));
+	createShapeVector();
+
+	//The map on which the shapes are
+	map = (uint8_t*) calloc(MAX_MATRIX_DIM, sizeof(uint8_t));
+
+	//The temporar matrix
+	m = (uint8_t*) calloc(MAX_MATRIX_DIM, sizeof(uint8_t));
+
+	//The shape we use in every step
+	createNewShape(&shape, &x, &y);
+	sendMatrix(shape->shpMat);
+
+	if (placeShapeToMatrix(&m, map, shape, x, y) < 0) {
+		perror("Can't place to matrix\n");
+		return;
+	}
+
+	//Settimer
+	struct sigaction sa;
+
+	/* Install timer_handler as the signal handler for SIGVTALRM. */
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = &shapeDownHandler;
+	sigaction(SIGALRM, &sa, NULL);
+
+	setTimer(2);
+
+	char key;
+	int i, r;
+	while (1) {
+		//setitimer(ITIMER_REAL, &tmval, NULL);
+		//If any key was entered
+		if (scanf("%c", &key)) {
+			if (key == 'a') {
+				if (!tryMove(LEFT, map, shape, &x, &y))
+					printf("can't\n");
+			}
+			if (key == 's') {
+				if (!tryMove(RIGHT, map, shape, &x, &y))
+					printf("can't\n");
+			}
+			if (key == 'w') {
+				if (!tryMove(ROTATE, map, shape, &x, &y))
+					printf("can't\n");
+			}
+		}
+	}
+}
+
+void setTimer(int sec){
+	/* Configure the timer to expire after sec... */
+		timer.it_value.tv_sec = sec;
+		timer.it_value.tv_usec = 0;
+		/* ... and every sec after that. */
+		timer.it_interval.tv_sec = sec;
+		timer.it_interval.tv_usec = 0;
+		/* Start a virtual timer. It counts down whenever this process is
+		 executing. */
+		setitimer(ITIMER_REAL, &timer, NULL);
+}
 
 void merge2Matrixes(uint8_t* m1, uint8_t* m2, uint8_t** matrix) {
 
@@ -146,6 +225,7 @@ void createNewShape(Shape** shp, int8_t* shape_x, int8_t* shape_y) {
 
 void removeFullRows(uint8_t** matrix) {
 	int i, j;
+	setTimer(1);
 	for (i = MAX_MATRIX_DIM - 1; i > 0; i--) {
 		if (((*matrix)[i] & 0xFF) == 0xFF) {
 			{
@@ -191,76 +271,5 @@ void shapeDownHandler(int sgn) {
 		sendMatrix(m);
 
 	}
-	struct itimerval timer;
-	/* Configure the timer to expire after 250 msec... */
-	timer.it_value.tv_sec = 1;
-	timer.it_value.tv_usec = 0;
-	/* ... and every 250 msec after that. */
-	timer.it_interval.tv_sec = 1;
-	timer.it_interval.tv_usec = 0;
-	/* Start a virtual timer. It counts down whenever this process is
-	 executing. */
-	setitimer(ITIMER_REAL, &timer, NULL);
+	setTimer(1);
 }
-
-void main(int argc, char* argv[]) {
-	initMatrix();
-	srand(time(NULL));
-	createShapeVector();
-
-	//The map on which the shapes are
-	map = (uint8_t*) calloc(MAX_MATRIX_DIM, sizeof(uint8_t));
-
-	//The temporar matrix
-	m = (uint8_t*) calloc(MAX_MATRIX_DIM, sizeof(uint8_t));
-
-	//The shape we use in every step
-	createNewShape(&shape, &x, &y);
-	sendMatrix(shape->shpMat);
-
-	if (placeShapeToMatrix(&m, map, shape, x, y) < 0) {
-		perror("Can't place to matrix\n");
-		return;
-	}
-
-	//Settimer
-	struct sigaction sa;
-	struct itimerval timer;
-
-	/* Install timer_handler as the signal handler for SIGVTALRM. */
-	memset(&sa, 0, sizeof(sa));
-	sa.sa_handler = &shapeDownHandler;
-	sigaction(SIGALRM, &sa, NULL);
-
-	/* Configure the timer to expire after 2 sec... */
-	timer.it_value.tv_sec = 2;
-	timer.it_value.tv_usec = 0;
-	/* ... and every 2 sec after that. */
-	timer.it_interval.tv_sec = 2;
-	timer.it_interval.tv_usec = 0;
-	/* Start a real timer. It counts down whenever this process is
-	 executing. */
-	setitimer(ITIMER_REAL, &timer, NULL);
-
-	char key;
-	int i, r;
-	while (1) {
-		//setitimer(ITIMER_REAL, &tmval, NULL);
-		//If any key was entered
-		if (scanf("%c", &key)) {
-			if (key == 'a') {
-				if (!tryMove(LEFT, map, shape, &x, &y))
-					printf("can't\n");
-			}
-			if (key == 's') {
-				if (!tryMove(RIGHT, map, shape, &x, &y))
-					printf("can't\n");
-			}
-			if (key == 'w') {
-				if (!tryMove(ROTATE, map, shape, &x, &y))
-					printf("can't\n");
-			}
-		}
-	}
-}
-
