@@ -159,13 +159,6 @@ void shapeDownHandler(int sgn) {
 	printf("DOWN:");
 	if (tryMove(DOWN, map, shape, &x, &y)) {
 
-		int r = rand() % 3 + 1;
-		printf("type %d:", r);
-		if (tryMove((Moves) r, map, shape, &x, &y)) {
-			printf("OK\n");
-		} else
-			printf("NOK\n");
-
 		placeShapeToMatrix(&m, map, shape, x, y);
 		sendMatrix(m);
 
