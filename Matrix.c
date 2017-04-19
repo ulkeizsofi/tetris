@@ -145,14 +145,18 @@ void createNewShape(Shape** shp, int8_t* shape_x, int8_t* shape_y) {
 }
 
 void removeFullRows(uint8_t** matrix) {
-	int i;
+	int i, j;
 	for (i = MAX_MATRIX_DIM - 1; i > 0; i--) {
 		if (((*matrix)[i] & 0xFF) == 0xFF) {
-			(*matrix)[i] = (*matrix)[i - 1];
+			{
+				for (j = i; j > 0; j--)
+					(*matrix)[i] = (*matrix)[i - 1];
+				if (((*matrix)[0] & 0xFF) == 0xFF)
+						(*matrix)[0] = 0;
+			}
 		}
 	}
-	if (((*matrix)[0] & 0xFF) == 0xFF)
-		(*matrix)[0] = 0;
+
 }
 
 void shapeDownHandler(int sgn) {
@@ -243,7 +247,7 @@ void main(int argc, char* argv[]) {
 	while (1) {
 		//setitimer(ITIMER_REAL, &tmval, NULL);
 		//If any key was entered
-		if (scanf("%c",&key)) {
+		if (scanf("%c", &key)) {
 			if (key == 'a') {
 				if (!tryMove(LEFT, map, shape, &x, &y))
 					printf("can't\n");
