@@ -141,18 +141,20 @@ Shape* shapeMatrixRotate(Shape* shp) {
 	int i, j;
 	uint8_t helpNo = 0;
 	Shape* newShape = shapeInit(NULL);
-	for (i = shp->width - 1; i >= 0; i--) {
+	printf("WIDTH: %d HEIGHT:%d\nSHAPE:\n",shp->width, shp->height);
+	sendMatrix(shp->shpMat);
+	for (i = shp->width - 1; i >= 0; i--){
 		for (j = shp->height - 1; j >= 0; j--) {
 			//The i-th bit of the shpMat[j]
 			//From a coloumn of shpMat we construct a number and place in the appropriate line of newShapeMat
 			newShape->shpMat[i] |= ((shp->shpMat[j] >> i) & 1)
-					<< (shp->height - j);
+					<< (shp->height - j - 1);
 		}
 //		newShape->shpMat[i] = helpNo;
 //		helpNo = 0;
 	}
 
-	//intercgange width and height
+	//interchange width and height
 
 	newShape->height = shp->width;
 	newShape->width = shp->height;
