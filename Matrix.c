@@ -195,6 +195,7 @@ int shapeRotate(uint8_t** resoult, uint8_t* matrix, Shape** shp, int8_t shape_x,
 	//Check if it fits to the map
 	if (placeShapeToMatrix(resoult, matrix, shpHelp, shape_x, shape_y) < 0) {
 		*resoult = NULL;
+		free(shpHelp);
 		return -1;
 	}
 

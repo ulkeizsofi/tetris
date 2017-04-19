@@ -141,8 +141,6 @@ Shape* shapeMatrixRotate(Shape* shp) {
 	int i, j;
 	uint8_t helpNo = 0;
 	Shape* newShape = shapeInit(NULL);
-	printf("WIDTH: %d HEIGHT:%d\nSHAPE:\n",shp->width, shp->height);
-	sendMatrix(shp->shpMat);
 	for (i = shp->width - 1; i >= 0; i--){
 		for (j = shp->height - 1; j >= 0; j--) {
 			//The i-th bit of the shpMat[j]
