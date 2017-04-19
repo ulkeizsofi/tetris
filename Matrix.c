@@ -250,7 +250,7 @@ void removeFullRows(uint8_t** matrix) {
 			{
 				//Move each row above
 				for (j = i; j > 0; j--)
-					(*matrix)[i] = (*matrix)[i - 1];
+					(*matrix)[j] = (*matrix)[j - 1];
 
 			}
 		}
