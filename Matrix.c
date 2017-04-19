@@ -258,7 +258,7 @@ void main(int argc, char* argv[]) {
 	while (1) {
 		//setitimer(ITIMER_REAL, &tmval, NULL);
 		//If any key was entered
-		if (key = getch()) {
+		if (key = (char)getchar()) {
 			if (key == 'a') {
 				if (!tryMove(LEFT, map, shape, &x, &y))
 					printf("can't\n");
