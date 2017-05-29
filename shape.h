@@ -14,11 +14,12 @@ typedef struct _Shape{
 	uint8_t* shpMat; 
 }Shape;
 
-Shape* shapeInit(uint8_t* shpmat);
+void shapeInit(uint8_t* shpmat,Shape* shp);
 int shapeToMatrix(uint8_t** extended, Shape* shp,int8_t x,int8_t y);
-Shape* shapeMatrixRotate(Shape* shp);
+void shapeMatrixRotate(Shape* shp, Shape* newShape);
 Shape* shapeGenerator();
 void createShapeVector();
 void copyShape(Shape* from, Shape **to);
+void freeShapeVector();
 
 #endif

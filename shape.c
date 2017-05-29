@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "matrixDrv.h"
 #include <math.h>
+#include <string.h>
 
 Shape** vShapes;
 uint8_t noShapes = 0;
@@ -16,45 +17,54 @@ uint8_t noShapes = 0;
 //}
 
 void createShapeVector() {
-	uint8_t** shpmat;
+	uint8_t shpmat[MAX_MATRIX_DIM][MAX_MATRIX_DIM];
+	memset(shpmat, 0, MAX_MATRIX_DIM * MAX_MATRIX_DIM);
 	Shape ** shpVect;
 	noShapes = 4;
 	int i;
-	shpVect = (Shape**) malloc(noShapes * sizeof(Shape*));
-	shpmat = (uint8_t**) malloc(noShapes * sizeof(uint8_t*));
-	for (i = 0; i < noShapes; i++) {
-		shpmat[i] = (uint8_t*) calloc( MAX_MATRIX_DIM, sizeof(uint8_t));
-		if (shpmat[i] == NULL) {
-			perror("Error at malloc\n");
-			return;
-		}
-	}
+	//The array of shapes
+	shpVect = (Shape**) malloc((noShapes+1) * sizeof(Shape*));
+
 	shpmat[0][0] = 0x07;
 	shpmat[0][1] = 0x02;
 	shpmat[0][2] = 0x00;
 	shpmat[0][3] = 0x00;
+
 	shpmat[1][0] = 0x07;
 	shpmat[1][1] = 0x00;
 	shpmat[1][2] = 0x00;
 	shpmat[1][3] = 0x00;
+
 	shpmat[2][0] = 0x03;
 	shpmat[2][1] = 0x03;
 	shpmat[2][2] = 0x00;
 	shpmat[2][3] = 0x00;
+
 	shpmat[3][0] = 0x06;
 	shpmat[3][1] = 0x03;
 	shpmat[3][2] = 0x00;
 	shpmat[3][3] = 0x00;
 
 	for (i = 0; i < noShapes; i++) {
+		//create the shape for each matrix
+		shpVect[i] = (Shape*)malloc(sizeof(Shape));
 
-		shpVect[i] = shapeInit(shpmat[i]);
 		if (shpVect[i] == NULL) {
 			perror("Error at malloc\n");
 			return;
 		}
+		shapeInit(shpmat[i], shpVect[i]);
 	}
 	vShapes = shpVect;
+}
+
+void freeShapeVector(){
+	int i;
+
+	for (i = 0; i < noShapes; i++){
+		free(vShapes[i]->shpMat);
+		free(vShapes[i]);
+	}
 }
 
 int calculateWidth(uint8_t* matr) {
@@ -81,19 +91,16 @@ int calculateHeigth(uint8_t* matr) {
 	return height;
 }
 
-Shape* shapeInit(uint8_t* shpmat) {
+void shapeInit(uint8_t* shpmat, Shape* shp) {
 	int i;
-	Shape* shp;
-	shp = (Shape*) malloc(sizeof(Shape));
-	if (shp == NULL) {
-		perror("Error at malloc\n");
-		return NULL;
-	}
 	if (shpmat == NULL) {
 		shp->width = 0;
 		shp->height = 0;
 		shp->shpMat = calloc(MAX_MATRIX_DIM, sizeof(uint8_t));
-		return shp;
+		return;
+	}
+	for (int i = 0; i < MAX_SHAPE_MATRIX_DIM; i++){
+		printf("%x\n",shpmat[i]);
 	}
 	shp->width = calculateWidth(shpmat);
 	shp->height = calculateHeigth(shpmat);
@@ -103,7 +110,7 @@ Shape* shapeInit(uint8_t* shpmat) {
 		shp->shpMat[i] = shpmat[i];
 	}
 
-	return shp;
+	return;
 }
 
 Shape* shapeGenerator() {
@@ -137,10 +144,10 @@ int shapeToMatrix(uint8_t** extended, Shape* shp, int8_t x, int8_t y) {
 	return 0;
 }
 
-Shape* shapeMatrixRotate(Shape* shp) {
+void shapeMatrixRotate(Shape* shp, Shape* newShape) {
 	int i, j;
 	uint8_t helpNo = 0;
-	Shape* newShape = shapeInit(NULL);
+	shapeInit(NULL, newShape);
 	for (i = shp->width - 1; i >= 0; i--){
 		for (j = shp->height - 1; j >= 0; j--) {
 			//The i-th bit of the shpMat[j]
@@ -156,7 +163,6 @@ Shape* shapeMatrixRotate(Shape* shp) {
 
 	newShape->height = shp->width;
 	newShape->width = shp->height;
-	return newShape;
 }
 
 void copyShape(Shape* from, Shape **to) {

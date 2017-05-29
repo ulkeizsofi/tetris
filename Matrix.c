@@ -11,7 +11,14 @@
 #include <time.h>
 #include <signal.h>
 #include <sys/time.h>
+#ifdef __PIBUILD__
 #include <wiringPi.h>
+#else
+#define wiringPiSetup(...)(0)
+#define wiringPiISR(...)(0)
+#define waitForInterrupt(...)(0)
+#define pullUpDnControl(...)(0)
+#endif
 
 typedef enum {
 	DOWN, RIGHT, LEFT, ROTATE
@@ -24,7 +31,6 @@ Shape* shape;
 struct itimerval timer;
 
 void setTimer(int sec);
-
 void merge2Matrixes(uint8_t* m1, uint8_t* m2, uint8_t** matrix);
 int placeShapeToMatrix(uint8_t** resoult, uint8_t* matrix, Shape* shp, int8_t x,
 		int8_t y);
@@ -43,95 +49,107 @@ void createNewShape(Shape** shp, int8_t* shape_x, int8_t* shape_y);
 void removeFullRows(uint8_t** matrix);
 void shapeDownHandler(int sgn);
 volatile char button = '0';
-void leftButtonHandler(void){
-	button = 'a';
-}
-void rightButtonHandler(void){
-	button = 's';
-}
-void rotateButtonHandler(void){
-	button = 'w';
-}
+void leftButtonHandler(void);
+void rightButtonHandler(void);
+void rotateButtonHandler(void);
 
 void main(int argc, char* argv[]) {
 	wiringPiSetup();
-while(1){
-	wiringPiISR(24, INT_EDGE_FALLING, leftButtonHandler);
-	        waitForInterrupt(24,-1);
-
-	wiringPiISR(25, INT_EDGE_FALLING, rightButtonHandler);
-	wiringPiISR(27, INT_EDGE_FALLING, rotateButtonHandler);
-	pullUpDnControl(24, PUD_UP);
-	pullUpDnControl(25, PUD_UP);
-	pullUpDnControl(27, PUD_UP);
-	setPadDrive(0,0);
-	setPadDrive(1,0);
-	setPadDrive(2,0);
-	
-	initMatrix();
-	srand(time(NULL));
-	createShapeVector();
-
-	//The map on which the shapes are
-	map = (uint8_t*) calloc(MAX_MATRIX_DIM, sizeof(uint8_t));
-
-	//The temporar matrix
-	m = (uint8_t*) calloc(MAX_MATRIX_DIM, sizeof(uint8_t));
-
-	//The shape we use in every step
-	createNewShape(&shape, &x, &y);
-
-	//Display the first shape
-	sendMatrix(shape->shpMat);
-
-	if (placeShapeToMatrix(&m, map, shape, x, y) < 0) {
-		perror("Can't place to matrix\n");
-		return;
-	}
-
-	//Settimer
-	struct sigaction sa;
-
-	/* Install timer_handler as the signal handler for SIGVTALRM. */
-	memset(&sa, 0, sizeof(sa));
-	sa.sa_handler = &shapeDownHandler;
-	sigaction(SIGALRM, &sa, NULL);
-
-	setTimer(2);
-
-	char key;
-	int i, r;
 	while (1) {
-		//If any key was entered
-		
-			if (button == 'a') {
-				if (!tryMove(LEFT, map, shape, &x, &y))
-					printf("can't\n");
-				usleep(300000);
-				button = '0';
+		//Set the Push button interrupts
+		wiringPiISR(24, INT_EDGE_FALLING, leftButtonHandler);
+		//Donot start the game until the left button is pushed
+		waitForInterrupt(24, -1);
+		//Set the Push button interrupts
+		wiringPiISR(25, INT_EDGE_FALLING, rightButtonHandler);
+		wiringPiISR(27, INT_EDGE_FALLING, rotateButtonHandler);
+		//Set the pull ups for the buttons
+		pullUpDnControl(24, PUD_UP);
+		pullUpDnControl(25, PUD_UP);
+		pullUpDnControl(27, PUD_UP);
 
+		//Make the initial configurations on the led matrix
+		initMatrix();
+		//Create the vector of shapes
+		//Each shape will be chosen from this vector randomly
+		createShapeVector();
+		srand(time(NULL));
+
+		//The map on which the shapes are
+		map = (uint8_t*) calloc(MAX_MATRIX_DIM, sizeof(uint8_t));
+
+		//The temporar matrix
+		m = (uint8_t*) calloc(MAX_MATRIX_DIM, sizeof(uint8_t));
+
+		//The shape we use in every step
+		createNewShape(&shape, &x, &y);
+
+		//Display the first shape
+
+		sendMatrix(shape->shpMat);
+
+		if (placeShapeToMatrix(&m, map, shape, x, y) < 0) {
+			perror("Can't place to matrix\n");
+			return;
+		}
+
+		//Settimer
+		struct sigaction sa;
+
+		/* Install timer_handler as the signal handler for SIGVTALRM. */
+		memset(&sa, 0, sizeof(sa));
+		sa.sa_handler = &shapeDownHandler;
+		sigaction(SIGALRM, &sa, NULL);
+
+		setTimer(2);
+
+		char key;
+		int i, r;
+		while (1) {
+
+			//If any key was entered
+#ifndef __PIBUILD__
+			if (scanf("%c", &button)) {
+#endif
+				if (button == 'a') {
+					if (!tryMove(LEFT, map, shape, &x, &y))
+						printf("can't\n");
+					usleep(300000);
+					button = '0';
+
+				}
+
+				if (button == 's') {
+					printf("right\n");
+					if (!tryMove(RIGHT, map, shape, &x, &y))
+						printf("can't\n");
+					usleep(300000);
+					button = '0';
+
+				}
+				if (button == 'w') {
+					if (!tryMove(ROTATE, map, shape, &x, &y))
+						printf("can't\n");
+					usleep(300000);
+					button = '0';
+
+				}
+#ifndef __PIBUILD__
 			}
+#endif
 
-
-			if (button == 's') {
-				printf("right\n");
-				if (!tryMove(RIGHT, map, shape, &x, &y))
-					printf("can't\n");
-				usleep(300000);
-				button = '0';
-
-			}
-			if (button == 'w') {
-				if (!tryMove(ROTATE, map, shape, &x, &y))
-					printf("can't\n");
-				usleep(300000);
-				button = '0';
-
-			}
-		
+		}
+		setTimer(-1);
 	}
-	setTimer(-1);
 }
+void leftButtonHandler(void) {
+	button = 'a';
+}
+void rightButtonHandler(void) {
+	button = 's';
+}
+void rotateButtonHandler(void) {
+	button = 'w';
 }
 void setTimer(int sec) {
 	/* Configure the timer to expire after sec... */
@@ -179,6 +197,7 @@ int placeShapeToMatrix(uint8_t** resoult, uint8_t* matrix, Shape* shp, int8_t x,
 
 void game_over() {
 	printf("GAME OVER\n");
+	freeShapeVector();
 	exit(0);
 }
 
@@ -226,20 +245,18 @@ int shapeDown(uint8_t** resoult, uint8_t* matrix, Shape* shp, int8_t shape_x,
 
 int shapeRotate(uint8_t** resoult, uint8_t* matrix, Shape** shp, int8_t shape_x,
 		int8_t shape_y) {
-	Shape* shpHelp;
+	Shape shpHelp;
 	//Rotate the matrix of the shape
-	shpHelp = shapeMatrixRotate(*shp);
+	shapeMatrixRotate(*shp, &shpHelp);
 
 	//Check if it fits to the map
-	if (placeShapeToMatrix(resoult, matrix, shpHelp, shape_x, shape_y) < 0) {
+	if (placeShapeToMatrix(resoult, matrix, &shpHelp, shape_x, shape_y) < 0) {
 		*resoult = NULL;
-		free(shpHelp);
 		return -1;
 	}
 
 	//Make the same change on the original shape
-	copyShape(shpHelp, shp);
-	free(shpHelp);
+	copyShape(&shpHelp, shp);
 }
 
 uint8_t tryMove(Moves move, uint8_t* matrix, Shape* shp, int8_t* shape_x,
@@ -287,7 +304,7 @@ void removeFullRows(uint8_t** matrix) {
 		//If it is full
 		if (((*matrix)[i] & 0xFF) == 0xFF) {
 			{
-				printf("Remove row: %d\n",i);
+				printf("Remove row: %d\n", i);
 				//Move each row above
 				for (j = i; j > 0; j--)
 					(*matrix)[j] = (*matrix)[j - 1];
