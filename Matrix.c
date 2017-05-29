@@ -11,6 +11,7 @@
 #include <time.h>
 #include <signal.h>
 #include <sys/time.h>
+#include <wiringPi.h>
 
 typedef enum {
 	DOWN, RIGHT, LEFT, ROTATE
@@ -41,8 +42,32 @@ uint8_t tryMove(Moves move, uint8_t* matrix, Shape* shp, int8_t* shape_x,
 void createNewShape(Shape** shp, int8_t* shape_x, int8_t* shape_y);
 void removeFullRows(uint8_t** matrix);
 void shapeDownHandler(int sgn);
+volatile char button = '0';
+void leftButtonHandler(void){
+	button = 'a';
+}
+void rightButtonHandler(void){
+	button = 's';
+}
+void rotateButtonHandler(void){
+	button = 'w';
+}
 
 void main(int argc, char* argv[]) {
+	wiringPiSetup();
+while(1){
+	wiringPiISR(24, INT_EDGE_FALLING, leftButtonHandler);
+	        waitForInterrupt(24,-1);
+
+	wiringPiISR(25, INT_EDGE_FALLING, rightButtonHandler);
+	wiringPiISR(27, INT_EDGE_FALLING, rotateButtonHandler);
+	pullUpDnControl(24, PUD_UP);
+	pullUpDnControl(25, PUD_UP);
+	pullUpDnControl(27, PUD_UP);
+	setPadDrive(0,0);
+	setPadDrive(1,0);
+	setPadDrive(2,0);
+	
 	initMatrix();
 	srand(time(NULL));
 	createShapeVector();
@@ -78,31 +103,44 @@ void main(int argc, char* argv[]) {
 	int i, r;
 	while (1) {
 		//If any key was entered
-		if (scanf("%c", &key)) {
-			if (key == 'a') {
+		
+			if (button == 'a') {
 				if (!tryMove(LEFT, map, shape, &x, &y))
 					printf("can't\n");
+				usleep(300000);
+				button = '0';
+
 			}
-			if (key == 's') {
+
+
+			if (button == 's') {
+				printf("right\n");
 				if (!tryMove(RIGHT, map, shape, &x, &y))
 					printf("can't\n");
+				usleep(300000);
+				button = '0';
+
 			}
-			if (key == 'w') {
+			if (button == 'w') {
 				if (!tryMove(ROTATE, map, shape, &x, &y))
 					printf("can't\n");
-			}
-		}
-	}
-}
+				usleep(300000);
+				button = '0';
 
+			}
+		
+	}
+	setTimer(-1);
+}
+}
 void setTimer(int sec) {
 	/* Configure the timer to expire after sec... */
 	timer.it_value.tv_sec = sec;
 	timer.it_value.tv_usec = 0;
 	/* ... and every sec after that. */
-	timer.it_interval.tv_sec = sec;
+	timer.it_interval.tv_sec = 1000;
 	timer.it_interval.tv_usec = 0;
-	/* Start a virtual timer. It counts down whenever this process is
+	/* Start timer. It counts down whenever this process is
 	 executing. */
 	setitimer(ITIMER_REAL, &timer, NULL);
 }
@@ -249,9 +287,11 @@ void removeFullRows(uint8_t** matrix) {
 		//If it is full
 		if (((*matrix)[i] & 0xFF) == 0xFF) {
 			{
+				printf("Remove row: %d\n",i);
 				//Move each row above
 				for (j = i; j > 0; j--)
 					(*matrix)[j] = (*matrix)[j - 1];
+				i++;
 
 			}
 		}
@@ -272,7 +312,6 @@ void shapeDownHandler(int sgn) {
 	} else {
 		//try to undo the last fall
 		placeShapeToMatrix(&map, map, shape, x, y);
-		assert(m);
 		sendMatrix(m);
 
 		//Replace the map with the temporary matrix
